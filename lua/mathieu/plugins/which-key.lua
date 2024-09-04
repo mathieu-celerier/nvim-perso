@@ -39,6 +39,7 @@ return {
 					o = { "<cmd>TroubleToggle<CR>", "Toggle Trouble.nvim" },
 					t = { "<cmd>TodoTrouble<CR>", "Open TODO's in Trouble.nvim" },
 				},
+				g = { "<cmd>LazyGit<CR>", "Toggle LazyGit" },
 				c = {
 					function()
 						require("Comment.api").toggle.linewise.current()
