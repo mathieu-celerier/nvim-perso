@@ -8,56 +8,57 @@ return {
 	opts = {
 		-- your configuration comes here
 		-- or leave it empty to use the default settings
-		-- refer to the configuration section below
+		-- refer to the configuration se state:open ction below
 	},
 	config = function()
 		local wk = require("which-key")
 		local set = vim.api.nvim_set_keymap
 
-		wk.register({
-			["<leader>"] = {
-				x = { "<cmd>lua MiniBufremove.delete()<CR>", "Close current buffer" },
-				f = {
-					name = "Files",
-					s = { ":Telescope live_grep<CR>", "Search in files using Telescope" },
-					f = { ":Telescope find_files<CR>", "Search files using Telescope" },
-					t = { ":TodoTelescope<CR>", "Find TODO's" },
-					c = { "<cmd>Telescope grep_string<cr>", "Find string under cursor in cwd" },
-				},
-				l = {
-					name = "LSP",
-					o = { "<cmd>lua vim.diagnostic.open_float()<CR>", "Open LSP diagnostic window" },
-					q = { "<cmd>lua vim.diagnostic.setloclist()<CR>", "Open loclist using split buffer" },
-					l = { ":Telescope loclist<CR>", "Open loclist using Telescope" },
-					d = { "<cmd>lua vim.lsp.buf.definition()<CR>", "Go to definition" },
-					D = { "<cmd>lua vim.lsp.buf.declaration()<CR>", "Go to declaration" },
-					f = { "<cmd>lua vim.lsp.buf.format()<CR>", "Format" },
-					h = { "<cmd>lua vim.lsp.buf.hover()<CR>", "Toggle LSP hover" },
-				},
-				t = {
-					name = "Trouble.nvim",
-					o = { "<cmd>TroubleToggle<CR>", "Toggle Trouble.nvim" },
-					t = { "<cmd>TodoTrouble<CR>", "Open TODO's in Trouble.nvim" },
-				},
-				g = { "<cmd>LazyGit<CR>", "Toggle LazyGit" },
-				c = {
-					function()
-						require("Comment.api").toggle.linewise.current()
-					end,
-					"Comment current line",
-				},
+		-- Normal mode mappings
+		wk.add({
+			{ "<leader>x", "<cmd>lua MiniBufremove.delete()<CR>", desc = "Close current buffer" },
+
+			-- Files
+			{ "<leader>fs", ":Telescope live_grep<CR>", desc = "Search in files using Telescope" },
+			{ "<leader>ff", ":Telescope find_files<CR>", desc = "Search files using Telescope" },
+			{ "<leader>ft", ":TodoTelescope<CR>", desc = "Find TODO's" },
+			{ "<leader>fc", "<cmd>Telescope grep_string<CR>", desc = "Find string under cursor in cwd" },
+
+			-- LSP
+			{ "<leader>lo", "<cmd>lua vim.diagnostic.open_float()<CR>", desc = "Open LSP diagnostic window" },
+			{ "<leader>lq", "<cmd>lua vim.diagnostic.setloclist()<CR>", desc = "Open loclist using split buffer" },
+			{ "<leader>ll", ":Telescope loclist<CR>", desc = "Open loclist using Telescope" },
+			{ "<leader>ld", "<cmd>lua vim.lsp.buf.definition()<CR>", desc = "Go to definition" },
+			{ "<leader>lD", "<cmd>lua vim.lsp.buf.declaration()<CR>", desc = "Go to declaration" },
+			{ "<leader>lf", "<cmd>lua vim.lsp.buf.format()<CR>", desc = "Format" },
+			{ "<leader>lh", "<cmd>lua vim.lsp.buf.hover()<CR>", desc = "Toggle LSP hover" },
+
+			-- Trouble.nvim
+			{ "<leader>to", "<cmd>TroubleToggle<CR>", desc = "Toggle Trouble.nvim" },
+			{ "<leader>tt", "<cmd>TodoTrouble<CR>", desc = "Open TODO's in Trouble.nvim" },
+
+			-- Misc
+			{ "<leader>g", "<cmd>LazyGit<CR>", desc = "Toggle LazyGit" },
+			{
+				"<leader>c",
+				function()
+					require("Comment.api").toggle.linewise.current()
+				end,
+				desc = "Comment current line",
 			},
+			{ "<leader>ca", "<cmd>lua vim.lsp.buf.code_action()<CR>", desc = "Code actions" },
 		})
 
 		-- Visual mode mappings
-		wk.register({
-			["<leader>"] = {
-				c = {
-					"<esc><cmd>lua require('Comment.api').toggle.linewise(vim.fn.visualmode())<CR>",
-					"Comment selected block",
-				},
+		wk.add({
+			{
+				"<leader>c",
+				"<esc><cmd>lua require('Comment.api').toggle.linewise(vim.fn.visualmode())<CR>",
+				desc = "Comment selected block",
+				mode = "v",
 			},
-		}, { mode = "v" })
+			{ "<leader>ca", "<cmd>lua vim.lsp.buf.code_action()<CR>", desc = "Code actions", mode = "v" },
+		})
 
 		vim.keymap.set("n", "<C-h>", require("smart-splits").move_cursor_left)
 		vim.keymap.set("n", "<C-j>", require("smart-splits").move_cursor_down)

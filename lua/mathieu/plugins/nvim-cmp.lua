@@ -14,6 +14,7 @@ return {
 		"saadparwaiz1/cmp_luasnip", -- for autocompletion
 		"rafamadriz/friendly-snippets", -- useful snippets
 		"onsails/lspkind.nvim", -- vs-code like pictograms
+		"micangl/cmp-vimtex",
 	},
 	config = function()
 		local cmp = require("cmp")
@@ -58,6 +59,16 @@ return {
 					maxwidth = 50,
 					ellipsis_char = "...",
 				}),
+			},
+		})
+		cmp.setup.filetype("tex", {
+			sources = {
+				{ name = "vimtex" },
+				{ name = "nvim_lsp" },
+				{ name = "luasnip" }, -- snippets
+				{ name = "buffer" }, -- text within current buffer
+				{ name = "path" }, -- file system paths
+				{ name = "neorg" }, -- file system paths
 			},
 		})
 	end,

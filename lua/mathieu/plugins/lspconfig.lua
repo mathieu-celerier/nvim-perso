@@ -3,16 +3,12 @@ return {
 	event = { "BufReadPre", "BufNewFile" },
 	dependencies = {
 		"hrsh7th/cmp-nvim-lsp",
+		"SmiteshP/nvim-navic",
 		{ "antosha417/nvim-lsp-file-operations", config = true },
 		{ "folke/neodev.nvim", opts = {} },
+		{ "barreiroleo/ltex_extra.nvim", ft = { "markdown", "tex" } },
 	},
 	config = function()
-		-- import lspconfig plugin
-		local lspconfig = require("lspconfig")
-
-		-- import mason_lspconfig plugin
-		local mason_lspconfig = require("mason-lspconfig")
-
 		-- import cmp-nvim-lsp plugin
 		local cmp_nvim_lsp = require("cmp_nvim_lsp")
 
@@ -37,12 +33,8 @@ return {
 
 				opts.desc = "Show LSP implementations"
 				keymap.set("n", "gi", "<cmd>Telescope lsp_implementations<CR>", opts) -- show lsp implementations
-
 				opts.desc = "Show LSP type definitions"
 				keymap.set("n", "gt", "<cmd>Telescope lsp_type_definitions<CR>", opts) -- show lsp type definitions
-
-				opts.desc = "See available code actions"
-				keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts) -- see available code actions, in visual mode will apply to selection
 
 				opts.desc = "Smart rename"
 				keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts) -- smart rename
@@ -78,59 +70,58 @@ return {
 			vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
 		end
 
-		mason_lspconfig.setup_handlers({
-			-- default handler for installed servers
-			function(server_name)
-				lspconfig[server_name].setup({
-					capabilities = capabilities,
-				})
-			end,
-			["svelte"] = function()
-				-- configure svelte server
-				lspconfig["svelte"].setup({
-					capabilities = capabilities,
-					on_attach = function(client, bufnr)
-						vim.api.nvim_create_autocmd("BufWritePost", {
-							pattern = { "*.js", "*.ts" },
-							callback = function(ctx)
-								-- Here use ctx.match instead of ctx.file
-								client.notify("$/onDidChangeTsOrJsFile", { uri = ctx.match })
-							end,
-						})
-					end,
-				})
-			end,
-			["lua_ls"] = function()
-				-- configure lua server (with special settings)
-				lspconfig["lua_ls"].setup({
-					capabilities = capabilities,
-					settings = {
-						Lua = {
-							-- make the language server recognize "vim" global
-							diagnostics = {
-								globals = { "vim" },
-							},
-							completion = {
-								callSnippet = "Replace",
-							},
-						},
+		local navic = require("nvim-navic")
+
+		local on_attach = function(client, bufnr)
+			if client.server_capabilities.documentSymbolProvider then
+				navic.attach(client, bufnr)
+			end
+		end
+
+		vim.lsp.config("lua_ls", {
+			-- configure lua server (with special settings)
+			capabilities = capabilities,
+			settings = {
+				Lua = {
+					-- make the language server recognize "vim" global
+					diagnostics = {
+						globals = { "vim" },
 					},
-				})
-			end,
-			["clangd"] = function()
-				lspconfig["clangd"].setup({
-					capabilities = capabilities,
-					cmd = {
-						"clangd",
-						"--background-index",
-						"--function-arg-placeholders",
-						"--completion-style=detailed",
-						"--header-insertion=never",
-						"--clang-tidy",
-						"--offset-encoding=utf-8",
+					completion = {
+						callSnippet = "Replace",
 					},
+				},
+			},
+		})
+
+		vim.lsp.config("ruff", {
+			capabilities = capabilities,
+			settings = {
+				init_options = {
+					settings = {},
+				},
+			},
+		})
+
+		vim.lsp.config("ltex", {
+			-- configure lua server (with special settings)
+			capabilities = require("cmp_nvim_lsp").default_capabilities(),
+			on_attach = function(...)
+				require("ltex_extra").setup({
+					load_langs = { "en-US" }, -- table <string> : languages for witch dictionaries will be loaded
+					init_check = true, -- boolean : whether to load dictionaries on startup
+					path = "", -- string : path to store dictionaries. Relative path uses current working directory
+					log_level = "none", -- string : "none", "trace", "debug", "info", "warn", "error", "fatal"
 				})
 			end,
+			settings = {
+				ltex = {
+					language = "en-US",
+					additionalRules = {
+						languageModel = "~/.local/models/ngrams/",
+					},
+				},
+			},
 		})
 	end,
 }

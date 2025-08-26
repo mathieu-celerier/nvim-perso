@@ -4,62 +4,41 @@ return {
 	config = function()
 		local lualine = require("lualine")
 		local lazy_status = require("lazy.status") -- to configure lazy pending updates count
+		local wc = require("mathieu.word-count")
+		wc.setup({
+			ref = "HEAD",
+			show_days = true, -- keep days everywhere
+			days_scope = "repo", -- or "file"
+			style = "icons", -- "icons" | "compact" | "minimal"
+			pad = "  ",
+			icons = { net = "", add = "+", del = "-", days = "", plus = "+", minus = "−" },
+		})
 
-		local colors = {
-			blue = "#10BEDD",
-			green = "#9FF83F",
-			pink = "#E673F0",
-			yellow = "#FFCF57",
-			red = "#FF4A4A",
-			fg = "#c3ccdc",
-			bg = "#161627",
-			inactive_bg = "#161627",
-		}
-
-		local my_lualine_theme = {
-			normal = {
-				a = { bg = colors.blue, fg = colors.bg, gui = "bold" },
-				b = { bg = colors.bg, fg = colors.fg },
-				c = { bg = colors.bg, fg = colors.fg },
-			},
-			insert = {
-				a = { bg = colors.green, fg = colors.bg, gui = "bold" },
-				b = { bg = colors.bg, fg = colors.fg },
-				c = { bg = colors.bg, fg = colors.fg },
-			},
-			visual = {
-				a = { bg = colors.pink, fg = colors.bg, gui = "bold" },
-				b = { bg = colors.bg, fg = colors.fg },
-				c = { bg = colors.bg, fg = colors.fg },
-			},
-			command = {
-				a = { bg = colors.yellow, fg = colors.bg, gui = "bold" },
-				b = { bg = colors.bg, fg = colors.fg },
-				c = { bg = colors.bg, fg = colors.fg },
-			},
-			replace = {
-				a = { bg = colors.red, fg = colors.bg, gui = "bold" },
-				b = { bg = colors.bg, fg = colors.fg },
-				c = { bg = colors.bg, fg = colors.fg },
-			},
-			inactive = {
-				a = { bg = colors.inactive_bg, fg = colors.semilightgray, gui = "bold" },
-				b = { bg = colors.inactive_bg, fg = colors.semilightgray },
-				c = { bg = colors.inactive_bg, fg = colors.semilightgray },
-			},
-		}
-
-		-- configure lualine with modified theme
 		lualine.setup({
 			options = {
-				theme = my_lualine_theme,
+				theme = "auto",
+				globalstatus = true,
 			},
 			sections = {
+				lualine_c = {
+					{ "filename" },
+					{
+						function()
+							return wc.statusline()
+						end,
+						colored = false,
+					},
+					{
+						function()
+							return wc.days_statusline()
+						end,
+						colored = false,
+					},
+				},
 				lualine_x = {
 					{
 						lazy_status.updates,
 						cond = lazy_status.has_updates,
-						color = { fg = "#ff9e64" },
 					},
 					{ "encoding" },
 					{ "fileformat" },

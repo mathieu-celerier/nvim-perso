@@ -11,7 +11,7 @@ opt.shiftwidth = 2
 opt.expandtab = true
 opt.autoindent = true
 
-opt.wrap = false
+opt.wrap = true
 opt.cole = 2
 
 -- search settings
@@ -22,7 +22,7 @@ opt.cursorline = true
 
 -- turn on termguicolors for colorscheme to work
 opt.termguicolors = true
-opt.background = "dark"
+-- opt.background = "dark"
 opt.signcolumn = "yes"
 
 -- backspace
