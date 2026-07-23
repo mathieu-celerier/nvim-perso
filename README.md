@@ -69,12 +69,74 @@ Why these matter:
 - `LuaSnip` is configured to build `jsregexp` with `make install_jsregexp`.
 - clipboard integration is enabled with `opt.clipboard:append("unnamedplus")`, so Linux users generally need `xclip` or `wl-copy`.
 
-### 2. Clone this config
+Pick the block for your system. These cover the base packages plus the
+recommended extras (`ripgrep`, `fd`, clipboard, `tmux`, `lazygit`) and the
+manual tools this config uses but does not auto-install (`latexmk`, `zathura`).
 
-Back up any existing config first, then place this repo at:
+#### Debian / Ubuntu
 
 ```sh
-~/.config/nvim
+sudo apt update
+sudo apt install -y \
+  neovim git curl wget unzip tar gzip make gcc \
+  nodejs npm python3 python3-pip python3-venv \
+  ripgrep fd-find xclip wl-clipboard tmux lazygit \
+  latexmk zathura texlive-full
+```
+
+> On Debian/Ubuntu the `fd` binary is called `fdfind`; symlink it if you want
+> the `fd` name: `mkdir -p ~/.local/bin && ln -s "$(which fdfind)" ~/.local/bin/fd`.
+> If the distro's `neovim` is older than 0.11, use the unstable PPA
+> (`sudo add-apt-repository ppa:neovim-ppa/unstable`) or the AppImage from
+> <https://github.com/neovim/neovim/releases>.
+
+#### Arch / Manjaro
+
+```sh
+sudo pacman -S --needed \
+  neovim git curl wget unzip tar gzip make gcc \
+  nodejs npm python python-pip \
+  ripgrep fd xclip wl-clipboard tmux lazygit \
+  texlive-most zathura zathura-pdf-mupdf
+```
+
+#### Fedora
+
+```sh
+sudo dnf install -y \
+  neovim git curl wget unzip tar gzip make gcc \
+  nodejs npm python3 python3-pip \
+  ripgrep fd-find xclip wl-clipboard tmux lazygit \
+  latexmk zathura texlive-scheme-full
+```
+
+#### macOS (Homebrew)
+
+```sh
+brew install \
+  neovim git curl wget gnu-tar make gcc \
+  node python ripgrep fd tmux lazygit
+brew install --cask mactex zathura
+```
+
+> macOS ships `unzip`, `gzip`, and `tar`, and uses the system clipboard, so
+> `xclip`/`wl-clipboard` are not needed. A TeX distribution via `mactex` is
+> large; `basictex` plus `latexmk` is a lighter alternative.
+
+Also install a Nerd Font for the UI icons (any patched font works):
+<https://www.nerdfonts.com/font-downloads>.
+
+### 2. Clone this config
+
+Back up any existing config and state, then clone this repo to `~/.config/nvim`:
+
+```sh
+# Back up an existing config (only runs if one is present)
+[ -e ~/.config/nvim ] && mv ~/.config/nvim ~/.config/nvim.bak.$(date +%s)
+[ -e ~/.local/share/nvim ] && mv ~/.local/share/nvim ~/.local/share/nvim.bak.$(date +%s)
+
+# Clone this config into place
+git clone <this-repo-url> ~/.config/nvim
 ```
 
 ### 3. Start Neovim once
@@ -161,6 +223,36 @@ This is the part most likely to be missed.
 
 - `detex`, `texcount`, or `pandoc`
   Used by [lua/mathieu/word-count.lua](/home/mathieu/.config/nvim/lua/mathieu/word-count.lua) to count TeX words in git diffs. The fallback is plain `wc -w`, but the LaTeX-aware tools are better.
+
+#### Copy-paste install for the manual tools
+
+`eslint_d` and `tex-fmt` are easiest to install from Mason (`:MasonInstall
+eslint_d tex-fmt`). The rest come from their own ecosystems:
+
+```sh
+# Node-based: eslint_d (JS/TS/Svelte linting)
+npm install -g eslint_d
+
+# Rust-based: tex-fmt (LaTeX formatter) and uv (Python env manager)
+cargo install tex-fmt          # or: download a release binary from GitHub
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# ruff (Python LSP/linter) — install via uv or pipx
+uv tool install ruff           # or: pipx install ruff
+
+# ltex-ls-plus (prose LSP) — grab a release archive and put it on $PATH
+#   https://github.com/ltex-plus/ltex-ls-plus/releases
+
+# texcount / detex usually ship with your TeX distribution; pandoc is separate:
+#   Debian/Ubuntu: sudo apt install -y pandoc
+#   Arch:          sudo pacman -S pandoc
+#   Fedora:        sudo dnf install -y pandoc
+#   macOS:         brew install pandoc
+```
+
+> `remote-nvim` needs `ssh`/`scp` (usually preinstalled) and, only for
+> devcontainer workflows, `devpod >= 0.5` from
+> <https://github.com/loft-sh/devpod/releases>.
 
 ### 6. Run health checks
 
