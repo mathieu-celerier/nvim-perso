@@ -277,7 +277,10 @@ For plugin state and build failures:
 ### Core bootstrap
 
 - `lazy.nvim`
-  Requires `git`. Upstream also recommends a Nerd Font and `luarocks` for rockspec installs.
+  Requires `git`. Upstream also recommends a Nerd Font. Some plugins pull in
+  Lua rock dependencies, which `lazy.nvim` installs through `luarocks` /
+  `hererocks` — see [Luarocks / hererocks](#luarocks--hererocks) below if that
+  step fails.
 
 - `plenary.nvim`
   Lua helper library. No external binary dependency by itself.
@@ -511,6 +514,78 @@ On Linux that usually means:
 - `wl-copy` / `wl-paste` from `wl-clipboard` on Wayland
 
 Without one of those providers, system clipboard support will be incomplete.
+
+## Luarocks / hererocks
+
+Some plugins declare Lua rock dependencies (rockspecs). When `lazy.nvim` sees
+one, it installs the rock into an isolated Lua env that it builds with
+[`hererocks`](https://github.com/luarocks/hererocks) — a Python script that
+compiles a private Lua + `luarocks` under `~/.local/share/nvim/lazy-rocks/`.
+This is the step that commonly breaks on a fresh machine, so it gets its own
+section here.
+
+`hererocks` needs, on `$PATH`:
+
+- `python3` (it is a Python script)
+- `git`, `curl` or `wget` (to fetch Lua and luarocks)
+- a C toolchain: `make` plus `gcc`/`clang`, and the Lua headers
+- `unzip` (luarocks unpacks rock archives)
+
+Install the build prerequisites:
+
+```sh
+# Debian / Ubuntu
+sudo apt install -y build-essential libreadline-dev unzip python3 curl git
+
+# Arch
+sudo pacman -S --needed base-devel readline unzip python curl git
+
+# Fedora
+sudo dnf install -y @development-tools readline-devel unzip python3 curl git
+
+# macOS (Xcode command line tools provide the compiler)
+xcode-select --install
+```
+
+### Checking and repairing the rocks env
+
+- `:checkhealth lazy` reports whether `luarocks` / `hererocks` are usable and
+  prints the exact error when they are not.
+- If the private env got into a bad state, delete it and let `lazy.nvim`
+  rebuild it on the next launch:
+
+  ```sh
+  rm -rf ~/.local/share/nvim/lazy-rocks
+  ```
+
+  then reopen Neovim and run `:Lazy sync`.
+
+### If you cannot get luarocks working
+
+Rock support is optional for this config. You can either disable it globally by
+adding `rocks = { enabled = false }` to the options table in
+[lua/mathieu/lazy.lua](/home/mathieu/.config/nvim/lua/mathieu/lazy.lua):
+
+```lua
+require("lazy").setup({ { import = "mathieu.plugins" } }, {
+  rocks = { enabled = false },
+  checker = {
+    enabled = true,
+    notify = false,
+  },
+  change_detection = {
+    notify = false,
+  },
+})
+```
+
+or, if a specific plugin only wants a rock in order to pull a Lua library that
+is also available as a normal plugin, add `pkg = false` to that plugin's spec so
+`lazy.nvim` skips its rockspec. The Neorg spec in
+[lua/mathieu/plugins/neorg.lua](/home/mathieu/.config/nvim/lua/mathieu/plugins/neorg.lua)
+already does this (`pkg = false`) and lists its Lua dependencies
+(`lua-utils.nvim`, `pathlib.nvim`, `nui.nvim`, `nvim-nio`) as plain plugins, so
+Neorg here does **not** require a working luarocks/hererocks toolchain.
 
 ## Key Bindings You Will Use Immediately
 
