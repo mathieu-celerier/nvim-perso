@@ -560,6 +560,49 @@ xcode-select --install
 
   then reopen Neovim and run `:Lazy sync`.
 
+### Error: "luarocks ... Lua 5.1 not installed" / "hererocks ... Lua 5.1"
+
+Rocks are built against **Lua 5.1** (Neovim's runtime is LuaJIT, which is 5.1
+compatible), so `luarocks` needs a Lua 5.1 interpreter. This error means one of
+two things:
+
+1. **`lazy.nvim` is using `hererocks` but cannot build its private Lua 5.1.**
+   hererocks downloads the Lua 5.1 source and compiles it, which fails without a
+   C compiler and the readline headers. Install the build prerequisites from the
+   [Luarocks / hererocks](#luarocks--hererocks) section above, wipe the env
+   (`rm -rf ~/.local/share/nvim/lazy-rocks`), and run `:Lazy sync` again.
+
+2. **`lazy.nvim` picked up a system `luarocks` that has no Lua 5.1 behind it.**
+   A distro `luarocks` is often wired to Lua 5.4, so it reports 5.1 as missing.
+   The most reliable fix is to install a matching Lua 5.1 + luarocks pair and
+   tell lazy.nvim to skip hererocks:
+
+   ```sh
+   # Debian / Ubuntu
+   sudo apt install -y lua5.1 liblua5.1-0-dev luarocks
+
+   # Arch
+   sudo pacman -S --needed lua51 luarocks
+
+   # Fedora
+   sudo dnf install -y compat-lua compat-lua-devel luarocks
+
+   # macOS
+   brew install lua@5.1 luarocks
+   ```
+
+   Then point lazy.nvim at the system luarocks instead of hererocks in the
+   options table of
+   [lua/mathieu/lazy.lua](/home/mathieu/.config/nvim/lua/mathieu/lazy.lua):
+
+   ```lua
+   rocks = {
+     hererocks = false, -- use system luarocks/lua5.1 instead of a private build
+   },
+   ```
+
+If neither route is worth the trouble, just disable rocks entirely — see below.
+
 ### If you cannot get luarocks working
 
 Rock support is optional for this config. You can either disable it globally by
