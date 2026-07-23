@@ -29,10 +29,14 @@ local function hex(n)
 end
 
 local function tool_pipe()
-	if vim.fn.executable("pandoc") == 1 then
-		return "pandoc -f latex -t plain --wrap=none 2>/dev/null | wc -w"
+	if vim.fn.executable("detex") == 1 then
+		return "detex - | wc -w"
 	elseif vim.fn.executable("texcount") == 1 then
-		return "texcount -brief - 2>/dev/null | tail -n1 | awk '{print $1}'"
+		-- texcount prints a small report; grab the final total
+		return "texcount -brief - 2>/dev/null | awk 'END{print $1+0}'"
+	elseif vim.fn.executable("pandoc") == 1 then
+		-- pandoc is strict about balanced LaTeX; OK as last resort
+		return "pandoc -f latex -t plain --wrap=none 2>/dev/null | wc -w"
 	else
 		return "wc -w"
 	end
@@ -54,8 +58,18 @@ local function words_since(ref)
 
 	local esc = vim.fn.shellescape(file)
 	local pipe = tool_pipe()
-	local cmd_add = "git diff -U0 " .. ref .. " -- " .. esc .. " | grep -E '^\\+[^+]' | sed 's/^+//' | " .. pipe
-	local cmd_del = "git diff -U0 " .. ref .. " -- " .. esc .. " | grep -E '^-([^-]|$)' | sed 's/^-//' | " .. pipe
+	local cmd_add = "git diff -U0 "
+		.. ref
+		.. " -- "
+		.. esc
+		.. " | awk '(/^\\+/ && !/^\\+\\+\\+/){sub(/^\\+/,\"\"); print}' | "
+		.. pipe
+	local cmd_del = "git diff -U0 "
+		.. ref
+		.. " -- "
+		.. esc
+		.. " | awk '(/^-/ && !/^---/){sub(/^-/,\"\"); print}' | "
+		.. pipe
 	local added = tonumber(trim(vim.fn.system(cmd_add))) or 0
 	local removed = tonumber(trim(vim.fn.system(cmd_del))) or 0
 	return { added = added, removed = removed, net = added - removed }
@@ -266,5 +280,42 @@ function M.setup(opts)
 		pcall(vim.cmd, "redrawstatus")
 	end, {})
 end
+
+vim.api.nvim_create_user_command("WordsSinceDebug", function()
+	local ref = M.config.ref or "HEAD"
+	local file = vim.fn.expand("%:p")
+	if file == "" then
+		return print("No file")
+	end
+	local esc, pipe = vim.fn.shellescape(file), tool_pipe()
+
+	local raw = vim.fn.system("git diff -U0 " .. ref .. " -- " .. esc .. " | sed -n '1,120p'")
+	local addL = vim.fn.system(
+		"git diff -U0 " .. ref .. " -- " .. esc .. " | awk '(/^\\+/ && !/^\\+\\+\\+/){print}' | sed -n '1,40p'"
+	)
+	local delL =
+		vim.fn.system("git diff -U0 " .. ref .. " -- " .. esc .. " | awk '(/^-/ && !/^---/){print}' | sed -n '1,40p'")
+	local addW = (vim.fn.system(
+		"git diff -U0 "
+			.. ref
+			.. " -- "
+			.. esc
+			.. " | awk '(/^\\+/ && !/^\\+\\+\\+/){sub(/^\\+/,\"\"); print}' | "
+			.. pipe
+	)):gsub("%s", "")
+	local delW = (vim.fn.system(
+		"git diff -U0 " .. ref .. " -- " .. esc .. " | awk '(/^-/ && !/^---/){sub(/^-/,\"\"); print}' | " .. pipe
+	)):gsub("%s", "")
+
+	print(
+		"=== RAW DIFF ===\n"
+			.. raw
+			.. "\n=== + LINES ===\n"
+			.. addL
+			.. "\n=== - LINES ===\n"
+			.. delL
+			.. ("\n=== COUNTS ===\nadded=%s  removed=%s\n"):format(addW, delW)
+	)
+end, {})
 
 return M

@@ -11,6 +11,7 @@ return {
 	config = function()
 		-- import cmp-nvim-lsp plugin
 		local cmp_nvim_lsp = require("cmp_nvim_lsp")
+		local lspconfig_util = require("lspconfig.util")
 
 		local keymap = vim.keymap -- for conciseness
 
@@ -78,6 +79,24 @@ return {
 			end
 		end
 
+		local ltex_root_dir = function(fname)
+			return lspconfig_util.root_pattern(".git", ".obsidian", "latexmkrc", "Makefile", "pyproject.toml")(fname)
+				or vim.fs.dirname(fname)
+		end
+
+		vim.lsp.config("clangd", {
+			capabilities = capabilities,
+			cmd = {
+				"clangd",
+				"--background-index",
+				"--function-arg-placeholders=false",
+				"--completion-style=detailed",
+				"--header-insertion=never",
+				"--clang-tidy",
+				"--offset-encoding=utf-8",
+			},
+		})
+
 		vim.lsp.config("lua_ls", {
 			-- configure lua server (with special settings)
 			capabilities = capabilities,
@@ -103,25 +122,55 @@ return {
 			},
 		})
 
+		vim.lsp.config("pyright", {
+			capabilities = capabilities,
+			settings = {
+				init_options = {
+					settings = {},
+				},
+			},
+		})
+
 		vim.lsp.config("ltex", {
 			-- configure lua server (with special settings)
 			capabilities = require("cmp_nvim_lsp").default_capabilities(),
+			root_dir = ltex_root_dir,
 			on_attach = function(...)
 				require("ltex_extra").setup({
-					load_langs = { "en-US" }, -- table <string> : languages for witch dictionaries will be loaded
+					load_langs = { "en-US", "fr" }, -- table <string> : languages for witch dictionaries will be loaded
 					init_check = true, -- boolean : whether to load dictionaries on startup
-					path = "", -- string : path to store dictionaries. Relative path uses current working directory
+					path = ".ltex", -- store LTeX state once per project root
 					log_level = "none", -- string : "none", "trace", "debug", "info", "warn", "error", "fatal"
 				})
 			end,
 			settings = {
 				ltex = {
 					language = "en-US",
+					configurationTarget = {
+						dictionary = "workspaceFolderExternalFile",
+						disabledRules = "workspaceFolderExternalFile",
+						hiddenFalsePositives = "workspaceFolderExternalFile",
+					},
 					additionalRules = {
 						languageModel = "~/.local/models/ngrams/",
 					},
 				},
 			},
 		})
+
+		vim.lsp.config("marksman", {
+			capabilities = capabilities,
+		})
+
+		for _, server in ipairs({
+			"clangd",
+			"lua_ls",
+			"ruff",
+			"pyright",
+			"ltex",
+			"marksman",
+		}) do
+			vim.lsp.enable(server)
+		end
 	end,
 }
