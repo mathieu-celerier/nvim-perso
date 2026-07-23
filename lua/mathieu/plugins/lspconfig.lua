@@ -131,6 +131,15 @@ return {
 			},
 		})
 
+		-- Optional n-gram language model for LTeX. Override the location with
+		-- $LTEX_NGRAMS_DIR; the setting is only sent if the directory exists so a
+		-- fresh machine without the models does not error.
+		local ltex_ngrams_dir = vim.env.LTEX_NGRAMS_DIR or vim.fn.expand("~/.local/models/ngrams/")
+		local ltex_additional_rules = {}
+		if vim.fn.isdirectory(ltex_ngrams_dir) == 1 then
+			ltex_additional_rules.languageModel = ltex_ngrams_dir
+		end
+
 		vim.lsp.config("ltex", {
 			-- configure lua server (with special settings)
 			capabilities = require("cmp_nvim_lsp").default_capabilities(),
@@ -151,9 +160,7 @@ return {
 						disabledRules = "workspaceFolderExternalFile",
 						hiddenFalsePositives = "workspaceFolderExternalFile",
 					},
-					additionalRules = {
-						languageModel = "~/.local/models/ngrams/",
-					},
+					additionalRules = ltex_additional_rules,
 				},
 			},
 		})

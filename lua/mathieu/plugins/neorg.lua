@@ -29,7 +29,8 @@ return {
 				["core.dirman"] = {
 					config = {
 						workspaces = {
-							notes = "~/neorg/notes",
+							-- Override with $NEORG_NOTES; defaults to ~/neorg/notes.
+							notes = vim.env.NEORG_NOTES or vim.fn.expand("~/neorg/notes"),
 						},
 						default_workspace = "notes",
 					},

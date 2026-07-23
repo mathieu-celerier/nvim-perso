@@ -308,13 +308,13 @@ If you want Obsidian quick search and switching:
 
 ### Obsidian
 
-This repo is hard-coded to this vault path:
+This repo defaults to this vault path:
 
 ```sh
-/home/mathieu/thesis/Obsidian-folder/
+~/thesis/Obsidian-folder/
 ```
 
-That directory exists on the inspected machine. If you use a different vault, update [lua/mathieu/plugins/obsidian-nvim.lua](/home/mathieu/.config/nvim/lua/mathieu/plugins/obsidian-nvim.lua).
+To use a different vault, set the `OBSIDIAN_VAULT` environment variable, or edit [lua/mathieu/plugins/obsidian-nvim.lua](/home/mathieu/.config/nvim/lua/mathieu/plugins/obsidian-nvim.lua).
 
 Daily notes are expected under:
 
@@ -332,7 +332,7 @@ Neorg is configured with this workspace:
 ~/neorg/notes
 ```
 
-That directory exists on the inspected machine.
+Override it with the `NEORG_NOTES` environment variable if you keep notes elsewhere.
 
 Neorg also depends on Treesitter and uses `nvim-cmp` integration in this config.
 
@@ -447,38 +447,19 @@ See:
 
 These are real caveats from the checked-in config.
 
-### LSP servers are configured, but not explicitly enabled
+### Machine-specific paths are overridable via environment variables
 
-[lua/mathieu/plugins/lspconfig.lua](/home/mathieu/.config/nvim/lua/mathieu/plugins/lspconfig.lua) defines server configs with `vim.lsp.config(...)`, but this repo does not currently call `vim.lsp.enable(...)` anywhere.
+The personal paths in this config now default sensibly and can be overridden
+without editing Lua:
 
-That means:
+| Variable | Default | Used by |
+| --- | --- | --- |
+| `OBSIDIAN_VAULT` | `~/thesis/Obsidian-folder` | `obsidian.nvim` |
+| `NEORG_NOTES` | `~/neorg/notes` | Neorg workspace |
+| `LTEX_NGRAMS_DIR` | `~/.local/models/ngrams/` | LTEX n-gram language model (optional) |
 
-- Mason may install the servers
-- the configuration exists
-- but LSP startup may still not happen automatically until explicit enable calls are added
-
-If you want the new Neovim 0.11 flow, add something like:
-
-```lua
-vim.lsp.enable("lua_ls")
-vim.lsp.enable("pyright")
-vim.lsp.enable("clangd")
-vim.lsp.enable("astro")
-vim.lsp.enable("ruff")
-vim.lsp.enable("ltex")
-```
-
-### LTEX has an extra local path assumption
-
-The LTEX config sets:
-
-```lua
-additionalRules = {
-  languageModel = "~/.local/models/ngrams/",
-}
-```
-
-On the inspected machine, that directory is currently missing. If you want LTEX language-model support, create/populate that path or remove that option.
+The LTEX `languageModel` setting is only sent to the server when the directory
+exists, so a fresh machine without the models will not error.
 
 ### `ruff` is configured but not installed by Mason here
 

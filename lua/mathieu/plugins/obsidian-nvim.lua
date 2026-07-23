@@ -62,7 +62,8 @@ return {
 		workspaces = {
 			{
 				name = "work",
-				path = "/home/mathieu/thesis/Obsidian-folder",
+				-- Override with $OBSIDIAN_VAULT; defaults to ~/thesis/Obsidian-folder.
+				path = vim.env.OBSIDIAN_VAULT or vim.fn.expand("~/thesis/Obsidian-folder"),
 			},
 		},
 
