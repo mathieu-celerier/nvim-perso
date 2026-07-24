@@ -563,8 +563,21 @@ xcode-select --install
 ### Error: "luarocks ... Lua 5.1 not installed" / "hererocks ... Lua 5.1"
 
 Rocks are built against **Lua 5.1** (Neovim's runtime is LuaJIT, which is 5.1
-compatible), so `luarocks` needs a Lua 5.1 interpreter. This error means one of
-two things:
+compatible), so `luarocks` needs a Lua 5.1 interpreter.
+
+**Try this first — it is usually all that is needed:**
+
+```sh
+# Debian / Ubuntu
+sudo apt install -y luarocks
+```
+
+Installing the system `luarocks` package pulls in a working Lua 5.1 toolchain,
+which resolved this error in practice. Then reopen Neovim and run `:Lazy sync`.
+The equivalent on other distros is `sudo pacman -S luarocks` (Arch),
+`sudo dnf install luarocks` (Fedora), or `brew install luarocks` (macOS).
+
+If that alone does not fix it, this error means one of two things:
 
 1. **`lazy.nvim` is using `hererocks` but cannot build its private Lua 5.1.**
    hererocks downloads the Lua 5.1 source and compiles it, which fails without a
