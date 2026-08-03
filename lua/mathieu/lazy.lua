@@ -29,11 +29,21 @@ local opts = {
 -- Absent (e.g. a plain clone on another machine), lazy.nvim behaves exactly
 -- as before.
 local plugin_farm = vim.env.NVIM_PLUGIN_FARM
-if plugin_farm and vim.fn.isdirectory(plugin_farm) == 1 then
+local on_nix = plugin_farm and vim.fn.isdirectory(plugin_farm) == 1
+if on_nix then
 	opts.dev = {
 		path = plugin_farm,
 		patterns = { "" },
 		fallback = true,
+	}
+
+	-- Nix (dotfiles' home/packages.nix) installs a Lua 5.1-linked luarocks,
+	-- replacing the machine's old, lua5.2-linked /usr/local/bin/luarocks.
+	-- Point lazy.nvim at it instead of hererocks building its own private
+	-- Lua + luarocks under ~/.local/share/nvim/lazy-rocks -- see this repo's
+	-- README ("Luarocks / hererocks") for what this works around.
+	opts.rocks = {
+		hererocks = false,
 	}
 end
 
