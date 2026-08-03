@@ -1,3 +1,8 @@
+local template_sync = require("mathieu.obsidian.template_sync")
+
+-- Override with $OBSIDIAN_VAULT; defaults to ~/thesis/Obsidian-folder.
+local vault_path = vim.env.OBSIDIAN_VAULT or vim.fn.expand("~/thesis/Obsidian-folder")
+
 local function vault_note_id(title, dir)
 	local builtin = require("obsidian.builtin")
 
@@ -26,26 +31,6 @@ local function vault_note_id(title, dir)
 	return candidate
 end
 
-local function is_empty_buffer(bufnr)
-	local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-	return #lines == 0 or (#lines == 1 and lines[1] == "")
-end
-
-local function maybe_populate_daily_note(note)
-	local daily_note = require("mathieu.obsidian.daily_note")
-	local path = note.path and tostring(note.path) or vim.api.nvim_buf_get_name(0)
-	if path == "" or not daily_note.is_daily_note_path(path) then
-		return
-	end
-
-	local date_str = vim.fn.fnamemodify(path, ":t:r")
-	if not daily_note.is_iso_date(date_str) or not is_empty_buffer(0) then
-		return
-	end
-
-	vim.api.nvim_buf_set_lines(0, 0, -1, false, daily_note.render(date_str))
-end
-
 return {
 	"obsidian-nvim/obsidian.nvim",
 	version = "*", -- recommended, use latest release instead of latest commit
@@ -62,8 +47,7 @@ return {
 		workspaces = {
 			{
 				name = "work",
-				-- Override with $OBSIDIAN_VAULT; defaults to ~/thesis/Obsidian-folder.
-				path = vim.env.OBSIDIAN_VAULT or vim.fn.expand("~/thesis/Obsidian-folder"),
+				path = vault_path,
 			},
 		},
 
@@ -82,6 +66,7 @@ return {
 			folder = "3 Resources/Journal/Daily",
 			date_format = "YYYY/MM-MMMM/YYYY-MM-DD",
 			workdays_only = false,
+			template = "Daily notes.md",
 		},
 		attachments = {
 			folder = "/5 Files",
@@ -89,15 +74,19 @@ return {
 		frontmatter = {
 			enabled = false,
 		},
-		-- Vault templates are written for Obsidian's Templater plugin, not obsidian.nvim.
+		-- Vault templates are written in Templater syntax for Obsidian's
+		-- Templater plugin. template_sync translates the daily-note template
+		-- into obsidian.nvim's {{ }} syntax on startup (see below) so this
+		-- folder is the generated copy, not the vault's real Templates dir.
 		templates = {
-			enabled = false,
-		},
-		callbacks = {
-			enter_note = maybe_populate_daily_note,
+			enabled = true,
+			folder = template_sync.generated_dirname(),
+			date_format = "YYYY-MM-DD",
+			time_format = "HH:mm",
 		},
 	},
 	config = function(_, opts)
+		template_sync.sync(vault_path, "Daily notes.md")
 		require("obsidian").setup(opts)
 
 		local Note = require("obsidian.note")
