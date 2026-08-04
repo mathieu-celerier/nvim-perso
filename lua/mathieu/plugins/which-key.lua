@@ -60,10 +60,13 @@ return {
 			{ "<leader>ca", "<cmd>lua vim.lsp.buf.code_action()<CR>", desc = "Code actions", mode = "v" },
 		})
 
-		vim.keymap.set("n", "<C-h>", require("smart-splits").move_cursor_left)
-		vim.keymap.set("n", "<C-j>", require("smart-splits").move_cursor_down)
-		vim.keymap.set("n", "<C-k>", require("smart-splits").move_cursor_up)
-		vim.keymap.set("n", "<C-l>", require("smart-splits").move_cursor_right)
+		-- herdr-splits.nvim owns <C-h/j/k/l> inside Herdr; avoid clobbering its maps.
+		if vim.env.HERDR_ENV ~= "1" then
+			vim.keymap.set("n", "<C-h>", require("smart-splits").move_cursor_left)
+			vim.keymap.set("n", "<C-j>", require("smart-splits").move_cursor_down)
+			vim.keymap.set("n", "<C-k>", require("smart-splits").move_cursor_up)
+			vim.keymap.set("n", "<C-l>", require("smart-splits").move_cursor_right)
+		end
 
 		-- Bufferline
 		set("n", "<S-Tab>", ":BufferLineCyclePrev<CR>", { silent = true, noremap = true })

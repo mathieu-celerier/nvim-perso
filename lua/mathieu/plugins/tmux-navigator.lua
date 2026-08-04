@@ -1,5 +1,7 @@
 return {
 	"christoomey/vim-tmux-navigator",
+	-- herdr-splits.nvim owns <C-h/j/k/l> inside Herdr; avoid clobbering its maps.
+	cond = vim.env.HERDR_ENV ~= "1",
 	cmd = {
 		"TmuxNavigateLeft",
 		"TmuxNavigateDown",
