@@ -15,7 +15,7 @@ return {
 				html = { "prettier" },
 				json = { "prettier" },
 				yaml = { "prettier" },
-				markdown = { "prettier" },
+				markdown = { "mdformat" },
 				lua = { "stylua" },
 				python = { "black" },
 				tex = { "tex-fmt" },
