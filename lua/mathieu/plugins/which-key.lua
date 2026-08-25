@@ -30,7 +30,13 @@ return {
 			{ "<leader>ll", ":Telescope loclist<CR>", desc = "Open loclist using Telescope" },
 			{ "<leader>ld", "<cmd>lua vim.lsp.buf.definition()<CR>", desc = "Go to definition" },
 			{ "<leader>lD", "<cmd>lua vim.lsp.buf.declaration()<CR>", desc = "Go to declaration" },
-			{ "<leader>lf", "<cmd>lua vim.lsp.buf.format()<CR>", desc = "Format" },
+			{
+				"<leader>lf",
+				function()
+					require("conform").format({ lsp_fallback = true, async = false, timeout_ms = 1000 })
+				end,
+				desc = "Format",
+			},
 			{ "<leader>lh", "<cmd>lua vim.lsp.buf.hover()<CR>", desc = "Toggle LSP hover" },
 
 			-- Trouble.nvim
